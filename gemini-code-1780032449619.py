@@ -16,8 +16,8 @@ class RelexClassification(BaseModel):
     category: Literal[
         "Integrated Circuit", "Semiconductor", "Resistor", "Capacitor", 
         "Inductor", "Rotating Device", "Relay", "Switching Device", 
-        "Connection", "Optical Device", "Mechanical Part", "Miscellaneous", ""
-    ] = Field(description="對應 Relex 的主類別 (Category)。若為機構件或不需計算的項目請給空字串 ''")
+        "Connection", "Optical Device", "Mechanical Part", "Miscellaneous", "None"
+    ] = Field(description="對應 Relex 的主類別 (Category)。若為機構件或不需計算的項目請給 'None'")
     
     subcategory: str = Field(
         description="""對應 Relex 的次類別 (Subcategory)。必須嚴格符合指定名稱，例如：
@@ -27,7 +27,7 @@ class RelexClassification(BaseModel):
         - Capacitor: General Ceramic (CK, CKR), Temp Compensat, Ceramic (CC, CCR), Chip, Ceramic (CDR), Paper (CA, CP), Plastic (CFR), Mica (CM, CMR), Glass (CY, CYR), Solid, Elec, Tant (CSR), Nonsolid, Elec, Tant (CL, CLR, CRL), Chip, Elec (CWR), Lead Mount, Elec, Alum (CE), Chassis Mount, Elec, Alum (CU, CUR), MOS
         - Inductor: Transformer, Coil
         - Connection: General, PCB Edge, IC Socket, Board with Plated Thru Holes, Other Connection, SMT Interconnect Assy
-        若為主類別為空字串，次類別也請給空字串 ''。"""
+        若為主類別為 'None'，次類別也請給 'None'。"""
     )
     confidence_score: float = Field(description="AI 分類信心度 0.0 ~ 1.0")
     reason: str = Field(description="說明為何判定為該類別的簡短工程理由")
@@ -44,7 +44,7 @@ def classify_component_by_ai(part_number: str, description: str) -> tuple:
     
     【注意事項】
     1. 請仔細辨識 Description 中的關鍵字（例如：RES, CAP, MLCC, IND, MOSFET, IC, DIODE, CONN, FB, Bead）。
-    2. 如果判斷該項目屬於「機構件」或「非電子常規計算件」（例如貼紙、外殼、螺絲、包材），主類別與次類別皆直接回傳空字串 ""。
+    2. 如果判斷該項目屬於「機構件」或「非電子常規計算件」（例如貼紙、外殼、螺絲、包材），主類別與次類別皆直接回傳 "None"。
     """
     try:
         response = client.models.generate_content(
@@ -67,10 +67,10 @@ def process_bom_list(file_path: str, output_path: str):
     df = pd.read_excel(file_path)
     
     # 🔍 請確認您 Excel 內實際的欄位名稱是否為這兩個 (大小寫需一致)
-    pn_col = "Part Number"
+    pn_col = "PartNumber"
     desc_col = "Description"
     
-    categories, subcategories, scores, reasons = [], [], []
+    categories, subcategories, scores, reasons = [], [], [], []
     ai_cache = {} # 相同料號快取機制
     total_rows = len(df)
     
@@ -88,6 +88,10 @@ def process_bom_list(file_path: str, output_path: str):
             reason_str = f"[快取複用] {reason}"
         else:
             cat, subcat, score, reason = classify_component_by_ai(pn, desc)
+            if cat == "None":
+                cat = ""
+            if subcat == "None":
+                subcat = ""
             if pn != "":
                 ai_cache[pn] = (cat, subcat, score, reason)
             reason_str = reason
