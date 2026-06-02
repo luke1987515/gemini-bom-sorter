@@ -50,20 +50,27 @@ def classify_component_by_ai(part_number: str, description: str) -> tuple:
     1. 請仔細辨識 Description 中的關鍵字（例如：RES, CAP, MLCC, IND, MOSFET, IC, DIODE, CONN, FB, Bead）。
     2. 如果判斷該項目屬於「機構件」或「非電子常規計算件」（例如貼紙、外殼、螺絲、包材），主類別與次類別皆直接回傳 "None"。
     \"\"\"
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=RelexClassification,
-                temperature=0.0, 
-            ),
-        )
-        result = json.loads(response.text)
-        return result['category'], result['subcategory'], result['confidence_score'], result['reason']
-    except Exception as e:
-        return "Error", str(e), 0.0, "API 呼叫失敗"
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=RelexClassification,
+                    temperature=0.0, 
+                ),
+            )
+            result = json.loads(response.text)
+            return result['category'], result['subcategory'], result['confidence_score'], result['reason']
+        except Exception as e:
+            if "429" in str(e) and attempt < max_retries - 1:
+                print(f"  [API 限制] 觸發頻率限制，等待 20 秒後自動重試 (第 {attempt+1} 次)...")
+                import time
+                time.sleep(20)
+                continue
+            return "Error", str(e), 0.0, "API 呼叫失敗"
 
 def process_bom_in_colab():
     # 3. 在 Colab 中呼叫上傳檔案介面
