@@ -40,4 +40,4 @@ An AI-powered automation tool using Google Gemini to classify hardware BOM compo
 4. AI 將自動分析並填入 Relex 的主分類、次分類等資訊，結束後會詢問您要將結果另存到哪個路徑。
 
 ## 注意事項
-- 目前免費版 Gemini API (Free Tier) 有每分鐘呼叫次數 (RPM) 等限制。若您的 BOM 表項目超過免費額度（例如超過 15 筆/分鐘），可能會遇到 `429 RESOURCE_EXHAUSTED` 錯誤。建議升級付費方案或在程式碼中加入延遲 (sleep) 來規避限制。
+- 目前免費版 Gemini API (Free Tier) 有每分鐘呼叫次數 (RPM) 的限制（約 15 次/分鐘）。為了避免遇到 `429 RESOURCE_EXHAUSTED` 錯誤，程式碼內部已內建加入 **4 秒的暫停機制 (sleep)**。這會讓處理速度變慢，但能確保穩定免費跑完大量資料。
