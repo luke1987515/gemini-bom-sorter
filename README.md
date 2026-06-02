@@ -3,7 +3,12 @@
 An AI-powered automation tool using Google Gemini to classify hardware BOM components for Relex reliability prediction.
 （利用 Google Gemini AI 自動將硬體 BOM 表元件歸類至 Relex 可靠度預估標準的自動化工具。）
 
-## 系統需求
+## 🚀 線上免安裝版 (Google Colab)
+不需要自己手動開空白 Colab 再慢慢貼程式碼，您可以直接把下面這串網址傳給您的同事：
+
+👉 [點我直接在 Google Colab 開啟 Gemini BOM Sorter](https://colab.research.google.com/github/luke1987515/gemini-bom-sorter/blob/main/gemini-bom-sorter-colab.ipynb)
+
+## 💻 本地端系統需求
 - Python 3.8+
 - 一把有效的 Gemini API Key
 
